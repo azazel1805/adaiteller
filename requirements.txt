@@ -1,4 +1,0 @@
-Flask>=2.0
-gunicorn>=20.0 # For deployment
-# Add deep_translator if you want simple translation
-# deep_translator>=1.9
