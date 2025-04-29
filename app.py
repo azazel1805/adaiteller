@@ -1,185 +1,241 @@
-import google.generativeai as genai
-import os
-import json # Although Flask handles JSON well, sometimes useful
-from dotenv import load_dotenv
-from flask import Flask, request, jsonify, render_template, abort
+import random
+from flask import Flask, render_template, request
 
-# --- Configuration ---
-MODEL_NAME = "gemini-1.5-flash" # Or your preferred model
-
-# Define choices internally (mapping from values sent by JS)
-# These need to match the 'value' attributes in the HTML select options
-LENGTH_CHOICES_MAP = {
-    "short": (250, 500),
-    "medium": (500, 1000),
-    "long": (1000, 1500),
-    "epic": (1500, 2000),
-}
-# Language and Genre are passed directly as strings
-
-# --- Helper Functions ---
-
-def load_api_key():
-    """Loads the Gemini API key from the .env file."""
-    load_dotenv()
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        print("Error: GEMINI_API_KEY not found in .env file.")
-        print("Please create a '.env' file in the root directory with:")
-        print("GEMINI_API_KEY=YOUR_API_KEY_HERE")
-        # In a real app, you might raise an exception or handle this more gracefully
-    return api_key
-
-def configure_gemini(api_key):
-    """Configures the Generative AI client."""
-    if not api_key:
-        return None
-    try:
-        genai.configure(api_key=api_key)
-        # Add generation config if needed (temperature, top_p, etc.)
-        # generation_config = genai.types.GenerationConfig(temperature=0.7)
-        model = genai.GenerativeModel(
-            MODEL_NAME,
-            # generation_config=generation_config
-            )
-        return model
-    except Exception as e:
-        print(f"Error configuring Gemini: {e}")
-        return None
-
-def build_prompt(inputs, story_history, action="start", next_part_instructions=None):
-    """Builds the prompt for the Gemini API."""
-    length_key = inputs.get('length', 'medium') # Default to medium if not provided
-    min_words, max_words = LENGTH_CHOICES_MAP.get(length_key, LENGTH_CHOICES_MAP['medium'])
-    language = inputs.get('language', 'English')
-    genre = inputs.get('genre', 'Adventure') # Default genre
-
-    prompt = f"You are a creative storyteller writing a story in {language}."
-    prompt += f" The story genre is {genre}.\n"
-    prompt += f"Main characters: {inputs.get('characters', 'A brave adventurer')}\n"
-    prompt += f"Setting: {inputs.get('setting', 'A mysterious forest')}\n"
-    if inputs.get('other_details'):
-        prompt += f"Initial details: {inputs.get('other_details')}\n"
-
-    # Add context from history if continuing or ending
-    if action in ["continue", "end"] and story_history:
-        prompt += "\nHere is the story so far (most recent parts first for context):\n---\n"
-        # Limit context to avoid exceeding token limits
-        context_limit = 2 # Number of previous parts to include
-        context = "\n\n...\n\n".join(story_history[-context_limit:])
-        prompt += context
-        prompt += "\n---\n"
-
-    # Add action instruction
-    if action == "start":
-        prompt += f"\nWrite the *first part* of the story. It should be approximately {min_words}-{max_words} words long. Establish the scene and introduce the character(s)."
-    elif action == "continue":
-        prompt += f"\nWrite the *next part* of the story, continuing logically from where the previous part ended. Maintain the established tone and characters."
-        if next_part_instructions:
-             prompt += f" Specific focus for this part: {next_part_instructions}."
-        prompt += f" This part should be approximately {min_words}-{max_words} words long and written in {language}."
-    elif action == "end":
-        prompt += "\nHere is the story so far:\n---\n"
-        # Include more history for the end if possible within limits
-        full_context = "\n\n...\n\n".join(story_history)
-        prompt += full_context # Potentially long, model should handle truncation if needed
-        prompt += "\n---\n"
-        prompt += f"\nWrite the *concluding part* of the story. Bring the current plot points to a satisfying resolution based on the genre and events so far."
-        prompt += f" The conclusion should be approximately {min_words}-{max_words} words long and written in {language}."
-
-    # print(f"DEBUG: Prompt for {action}:\n{prompt[:500]}...") # Debugging prompt
-    return prompt
-
-# --- Flask App ---
 app = Flask(__name__)
-api_key = load_api_key()
-model = configure_gemini(api_key)
+
+# --- Story Generation Logic (Simple Templates) ---
+
+def generate_simple_story(characters, setting, story_type, language='en'):
+    """Generates a story using simple templates and emojis."""
+
+    # --- Basic Language Templates (Expand these!) ---
+    # We'll use placeholders like {characters}, {setting}, {type_adj}
+    # You would ideally have more varied templates per language.
+    templates = {
+        'en': [
+            ("The Grand {type_adj} of {characters}",
+             "Once upon a time, in the {adj} setting of {setting}, lived {characters}. {pronoun} embarked on a grand {type} quest, filled with {element1} and unexpected {element2}. ✨ Will they succeed? Only time will tell! 🥳"),
+            ("A {type_adj} Day in {setting}",
+             "Sunlight streamed into {setting} ☀️, illuminating the path for {characters}. It was the perfect day for a {type} adventure! They encountered {element1} and discovered a hidden {element2}. What a joyful journey! 😄"),
+            ("{characters} and the Secret of {setting}",
+             "Deep within {setting} lay a secret waiting to be found 🤫. {characters}, known for their bravery, took on the {type} challenge. They navigated tricky {element1} and finally uncovered the startling {element2}! 🎉"),
+        ],
+        'es': [
+            ("La Gran {type_adj} de {characters}",
+             "Érase una vez, en el {adj} lugar de {setting}, vivía(n) {characters}. {pronoun} se embarcó/embarcaron en una gran misión de {type}, llena de {element1} y {element2} inesperados. ✨ ¿Tendrán éxito? ¡Solo el tiempo lo dirá! 🥳"),
+            ("Un Día {type_adj} en {setting}",
+             "La luz del sol entraba en {setting} ☀️, iluminando el camino para {characters}. ¡Era el día perfecto para una aventura de {type}! Encontraron {element1} y descubrieron un(a) {element2} oculto(a). ¡Qué viaje tan alegre! 😄"),
+            ("{characters} y el Secreto de {setting}",
+             "En las profundidades de {setting} yacía un secreto esperando ser encontrado 🤫. {characters}, conocido(s) por su valentía, aceptó/aceptaron el desafío de {type}. ¡Navegaron por {element1} difíciles y finalmente descubrieron el/la sorprendente {element2}! 🎉"),
+        ],
+         'fr': [
+            ("La Grande {type_adj} de {characters}",
+             "Il était une fois, dans le décor {adj} de {setting}, vivaient {characters}. {pronoun} se lança/lancèrent dans une grande quête de {type}, remplie de {element1} et de {element2} inattendus. ✨ Réussiront-ils/elles ? Seul le temps nous le dira ! 🥳"),
+            ("Une Journée {type_adj} à {setting}",
+             "La lumière du soleil inondait {setting} ☀️, éclairant le chemin pour {characters}. C'était le jour parfait pour une aventure de {type} ! Ils/Elles rencontrèrent {element1} et découvrirent un(e) {element2} caché(e). Quelle joyeuse aventure ! 😄"),
+            ("{characters} et le Secret de {setting}",
+             "Au cœur de {setting} se cachait un secret 🤫. {characters}, connu(e)(s) pour leur bravoure, releva/relevèrent le défi de {type}. Ils/Elles naviguèrent à travers des {element1} délicats et découvrirent enfin le/la surprenant(e) {element2} ! 🎉"),
+        ],
+        'de': [
+            ("Das große {type_adj} von {characters}",
+             "Es war einmal, in der {adj} Umgebung von {setting}, lebte(n) {characters}. {pronoun} begab(en) sich auf eine große {type}-Quest, voller {element1} und unerwarteter {element2}. ✨ Werden sie Erfolg haben? Nur die Zeit wird es zeigen! 🥳"),
+            ("Ein {type_adj} Tag in {setting}",
+             "Sonnenlicht strömte nach {setting} ☀️ und erhellte den Weg für {characters}. Es war der perfekte Tag für ein {type}-Abenteuer! Sie begegneten {element1} und entdeckten ein(e) versteckte(s) {element2}. Welch fröhliche Reise! 😄"),
+            ("{characters} und das Geheimnis von {setting}",
+             "Tief in {setting} lag ein Geheimnis verborgen 🤫. {characters}, bekannt für ihre Tapferkeit, nahm(en) die {type}-Herausforderung an. Sie navigierten durch knifflige {element1} und enthüllten schließlich das überraschende {element2}! 🎉"),
+        ],
+        'it': [
+            ("La Grande {type_adj} di {characters}",
+             "C'era una volta, nell'ambiente {adj} di {setting}, viveva/vivevano {characters}. {pronoun} si imbarcò/imbarcarono in una grande missione di {type}, piena di {element1} e {element2} inaspettati. ✨ Riusciranno nell'impresa? Solo il tempo lo dirà! 🥳"),
+            ("Una Giornata {type_adj} a {setting}",
+             "La luce del sole inondava {setting} ☀️, illuminando il cammino per {characters}. Era il giorno perfetto per un'avventura di {type}! Incontrarono {element1} e scoprirono un(a) {element2} nascosto(a). Che viaggio gioioso! 😄"),
+            ("{characters} e il Segreto di {setting}",
+             "Nel profondo di {setting} si nascondeva un segreto 🤫. {characters}, noto/i per il loro coraggio, accettò/accettarono la sfida di {type}. Navigarono attraverso {element1} difficili e alla fine scoprirono il/la sorprendente {element2}! 🎉"),
+        ],
+         'pt': [
+            ("A Grande {type_adj} de {characters}",
+             "Era uma vez, no cenário {adj} de {setting}, vivia(m) {characters}. {pronoun} embarcou/embarcaram numa grande jornada de {type}, cheia de {element1} e {element2} inesperados. ✨ Terão sucesso? Só o tempo dirá! 🥳"),
+            ("Um Dia {type_adj} em {setting}",
+             "A luz do sol entrava em {setting} ☀️, iluminando o caminho para {characters}. Era o dia perfeito para uma aventura de {type}! Encontraram {element1} e descobriram um(a) {element2} escondido(a). Que jornada alegre! 😄"),
+            ("{characters} e o Segredo de {setting}",
+             "Nas profundezas de {setting} escondia-se um segredo 🤫. {characters}, conhecido(s) pela sua bravura, aceitou/aceitaram o desafio de {type}. Navegaram por {element1} complicados e finalmente descobriram o/a surpreendente {element2}! 🎉"),
+        ],
+        # Add other languages here...
+    }
+
+    # Fallback to English if language not found
+    if language not in templates:
+        language = 'en'
+
+    # --- Define elements based on story type ---
+    type_elements = {
+        'en': {
+            'Adventure': (["exciting challenges 🧗", "daring escapes 🏃💨", "mysterious maps 🗺️"], ["ancient ruins 🏛️", "sparkling treasure 💎", "a hidden portal ✨"]),
+            'Romance': (["stolen glances 👀", "heartfelt confessions 💌", "a moonlit dance 🌕"], ["a blossoming flower 🌹", "a promised future 💍", "true love's kiss 😘"]),
+            'Mystery': (["cryptic clues ❓", "suspicious whispers 🤫", "locked doors 🔒"], ["a forgotten diary 📖", "a hidden motive 💡", "the real culprit 👤"]),
+            'Fantasy': (["magical spells ✨", "mythical creatures 🐉", "enchanted forests 🌳"], ["a powerful artifact 💍", "a prophecy foretold 📜", "a dragon's hoard 💰"]),
+            'Sci-Fi': (["laser battles 🔫", "hyperspace jumps 🚀", "alien encounters 👽"], ["an advanced AI 🤖", "a distant galaxy 🌌", "a time paradox ⏳"]),
+            'Humor': (["silly misunderstandings 😂", "wacky inventions 🤪", "unexpected punchlines 💥"], ["a rubber chicken 🐔", "a pie in the face 🥧", "a talking squirrel 🐿️"]),
+            'Fairy Tale': (["a fairy godmother 🧚", "talking animals 🦉", "a royal ball 👑"], ["a glass slipper 👠", "a magic beanstalk 🌱", "happily ever after 💖"]),
+        },
+         'es': { # Example Spanish translations
+            'Adventure': (["desafíos emocionantes 🧗", "huidas audaces 🏃💨", "mapas misteriosos 🗺️"], ["ruinas antiguas 🏛️", "tesoros brillantes 💎", "un portal oculto ✨"]),
+            'Romance': (["miradas robadas 👀", "confesiones sinceras 💌", "un baile bajo la luna 🌕"], ["una flor que florece 🌹", "un futuro prometido 💍", "el beso del amor verdadero 😘"]),
+            'Mystery': (["pistas crípticas ❓", "susurros sospechosos 🤫", "puertas cerradas 🔒"], ["un diario olvidado 📖", "un motivo oculto 💡", "el verdadero culpable 👤"]),
+            'Fantasy': (["hechizos mágicos ✨", "criaturas míticas 🐉", "bosques encantados 🌳"], ["un artefacto poderoso 💍", "una profecía anunciada 📜", "el tesoro de un dragón 💰"]),
+            'Sci-Fi': (["batallas láser 🔫", "saltos al hiperespacio 🚀", "encuentros alienígenas 👽"], ["una IA avanzada 🤖", "una galaxia lejana 🌌", "una paradoja temporal ⏳"]),
+            'Humor': (["malentendidos tontos 😂", "inventos locos 🤪", "remates inesperados 💥"], ["un pollo de goma 🐔", "una tarta en la cara 🥧", "una ardilla parlante 🐿️"]),
+            'Fairy Tale': (["un hada madrina 🧚", "animales parlantes 🦉", "un baile real 👑"], ["una zapatilla de cristal 👠", "un tallo de frijol mágico 🌱", "felices para siempre 💖"]),
+        },
+        # Add translated elements for fr, de, it, pt...
+         'fr': {
+            'Adventure': (["défis passionnants 🧗", "évasions audacieuses 🏃💨", "cartes mystérieuses 🗺️"], ["ruines antiques 🏛️", "trésors étincelants 💎", "un portail caché ✨"]),
+            'Romance': (["regards volés 👀", "confessions sincères 💌", "une danse au clair de lune 🌕"], ["une fleur épanouie 🌹", "un avenir promis 💍", "le baiser du véritable amour 😘"]),
+            'Mystery': (["indices cryptiques ❓", "murmures suspects 🤫", "portes verrouillées 🔒"], ["un journal oublié 📖", "un mobile caché 💡", "le vrai coupable 👤"]),
+            'Fantasy': (["sorts magiques ✨", "créatures mythiques 🐉", "forêts enchantées 🌳"], ["un artefact puissant 💍", "une prophétie annoncée 📜", "le trésor d'un dragon 💰"]),
+            'Sci-Fi': (["batailles laser 🔫", "sauts hyperspatiaux 🚀", "rencontres extraterrestres 👽"], ["une IA avancée 🤖", "une galaxie lointaine 🌌", "un paradoxe temporel ⏳"]),
+            'Humor': (["quiproquos idiots 😂", "inventions farfelues 🤪", "chutes inattendues 💥"], ["un poulet en caoutchouc 🐔", "une tarte à la crème 🥧", "un écureuil parlant 🐿️"]),
+            'Fairy Tale': (["une fée marraine 🧚", "animaux parlants 🦉", "un bal royal 👑"], ["une pantoufle de verre 👠", "un haricot magique 🌱", "ils vécurent heureux 💖"]),
+        },
+        'de': {
+            'Adventure': (["spannende Herausforderungen 🧗", "kühne Fluchten 🏃💨", "mysteriöse Karten 🗺️"], ["antike Ruinen 🏛️", "funkelnde Schätze 💎", "ein verstecktes Portal ✨"]),
+            'Romance': (["gestohlene Blicke 👀", "herzliche Geständnisse 💌", "ein Tanz im Mondschein 🌕"], ["eine blühende Blume 🌹", "eine versprochene Zukunft 💍", "der Kuss der wahren Liebe 😘"]),
+            'Mystery': (["kryptische Hinweise ❓", "verdächtiges Flüstern 🤫", "verschlossene Türen 🔒"], ["ein vergessenes Tagebuch 📖", "ein verborgenes Motiv 💡", "der wahre Schuldige 👤"]),
+            'Fantasy': (["magische Zauber ✨", "mythische Kreaturen 🐉", "verwunschene Wälder 🌳"], ["ein mächtiges Artefakt 💍", "eine Prophezeiung 📜", "ein Drachenhort 💰"]),
+            'Sci-Fi': (["Laserschlachten 🔫", "Hyperraumsprünge 🚀", "Alienbegegnungen 👽"], ["eine fortschrittliche KI 🤖", "eine ferne Galaxie 🌌", "ein Zeitparadoxon ⏳"]),
+            'Humor': (["alberne Missverständnisse 😂", "verrückte Erfindungen 🤪", "unerwartete Pointen 💥"], ["ein Gummihuhn 🐔", "eine Torte ins Gesicht 🥧", "ein sprechendes Eichhörnchen 🐿️"]),
+            'Fairy Tale': (["eine gute Fee 🧚", "sprechende Tiere 🦉", "ein königlicher Ball 👑"], ["ein gläserner Schuh 👠", "eine magische Bohnenranke 🌱", "glücklich bis ans Ende 💖"]),
+        },
+        'it': {
+            'Adventure': (["sfide emozionanti 🧗", "fughe audaci 🏃💨", "mappe misteriose 🗺️"], ["rovine antiche 🏛️", "tesori scintillanti 💎", "un portale nascosto ✨"]),
+            'Romance': (["sguardi rubati 👀", "confessioni sincere 💌", "un ballo al chiaro di luna 🌕"], ["un fiore che sboccia 🌹", "un futuro promesso 💍", "il bacio del vero amore 😘"]),
+            'Mystery': (["indizi criptici ❓", "sussurri sospetti 🤫", "porte chiuse 🔒"], ["un diario dimenticato 📖", "un movente nascosto 💡", "il vero colpevole 👤"]),
+            'Fantasy': (["incantesimi magici ✨", "creature mitiche 🐉", "foreste incantate 🌳"], ["un artefatto potente 💍", "una profezia annunciata 📜", "il tesoro di un drago 💰"]),
+            'Sci-Fi': (["battaglie laser 🔫", "salti nell'iperspazio 🚀", "incontri alieni 👽"], ["un'IA avanzata 🤖", "una galassia lontana 🌌", "un paradosso temporale ⏳"]),
+            'Humor': (["equivoci sciocchi 😂", "invenzioni stravaganti 🤪", "battute inaspettate 💥"], ["un pollo di gomma 🐔", "una torta in faccia 🥧", "uno scoiattolo parlante 🐿️"]),
+            'Fairy Tale': (["una fata madrina 🧚", "animali parlanti 🦉", "un ballo reale 👑"], ["una scarpetta di vetro 👠", "una pianta di fagioli magica 🌱", "e vissero felici e contenti 💖"]),
+        },
+         'pt': {
+            'Adventure': (["desafios emocionantes 🧗", "fugas ousadas 🏃💨", "mapas misteriosos 🗺️"], ["ruínas antigas 🏛️", "tesouros brilhantes 💎", "um portal escondido ✨"]),
+            'Romance': (["olhares roubados 👀", "confissões sinceras 💌", "uma dança ao luar 🌕"], ["uma flor a desabrochar 🌹", "um futuro prometido 💍", "o beijo do amor verdadeiro 😘"]),
+            'Mystery': (["pistas enigmáticas ❓", "sussurros suspeitos 🤫", "portas trancadas 🔒"], ["um diário esquecido 📖", "um motivo oculto 💡", "o verdadeiro culpado 👤"]),
+            'Fantasy': (["feitiços mágicos ✨", "criaturas míticas 🐉", "florestas encantadas 🌳"], ["um artefato poderoso 💍", "uma profecia anunciada 📜", "o tesouro de um dragão 💰"]),
+            'Sci-Fi': (["batalhas de laser 🔫", "saltos no hiperespaço 🚀", "encontros alienígenas 👽"], ["uma IA avançada 🤖", "uma galáxia distante 🌌", "um paradoxo temporal ⏳"]),
+            'Humor': (["mal-entendidos bobos 😂", "invenções malucas 🤪", "piadas inesperadas 💥"], ["uma galinha de borracha 🐔", "uma torta na cara 🥧", "um esquilo falante 🐿️"]),
+            'Fairy Tale': (["uma fada madrinha 🧚", "animais falantes 🦉", "um baile real 👑"], ["um sapatinho de cristal 👠", "um pé de feijão mágico 🌱", "felizes para sempre 💖"]),
+        },
+    }
+
+
+    # --- Get type-specific adjectives and pronouns (basic) ---
+    # This needs significant improvement for real grammatical accuracy per language
+    type_adjectives = {
+        'en': {'Adventure': 'thrilling', 'Romance': 'heartwarming', 'Mystery': 'puzzling', 'Fantasy': 'enchanted', 'Sci-Fi': 'cosmic', 'Humor': 'hilarious', 'Fairy Tale': 'magical'},
+        'es': {'Adventure': 'emocionante', 'Romance': 'conmovedora', 'Mystery': 'desconcertante', 'Fantasy': 'encantada', 'Sci-Fi': 'cósmica', 'Humor': 'hilarante', 'Fairy Tale': 'mágica'},
+        'fr': {'Adventure': 'palpitante', 'Romance': 'chaleureuse', 'Mystery': 'déroutante', 'Fantasy': 'enchantée', 'Sci-Fi': 'cosmique', 'Humor': 'hilarante', 'Fairy Tale': 'magique'},
+        'de': {'Adventure': 'aufregenden', 'Romance': 'herzerwärmenden', 'Mystery': 'rätselhaften', 'Fantasy': 'verzauberten', 'Sci-Fi': 'kosmischen', 'Humor': 'urkomischen', 'Fairy Tale': 'magischen'},
+        'it': {'Adventure': 'emozionante', 'Romance': 'commovente', 'Mystery': 'sconcertante', 'Fantasy': 'incantata', 'Sci-Fi': 'cosmica', 'Humor': 'esilarante', 'Fairy Tale': 'magica'},
+        'pt': {'Adventure': 'emocionante', 'Romance': 'comovente', 'Mystery': 'intrigante', 'Fantasy': 'encantada', 'Sci-Fi': 'cósmica', 'Humor': 'hilariante', 'Fairy Tale': 'mágica'},
+    }
+    setting_adjectives = {
+        'en': ['whimsical', 'bustling', 'serene', 'mysterious', 'futuristic', 'charming'],
+        'es': ['caprichoso', 'bullicioso', 'sereno', 'misterioso', 'futurista', 'encantador'],
+        'fr': ['fantasque', 'animé', 'serein', 'mystérieux', 'futuriste', 'charmant'],
+        'de': ['launischen', 'belebten', 'ruhigen', 'mysteriösen', 'futuristischen', 'charmanten'],
+        'it': ['stravagante', 'vivace', 'sereno', 'misterioso', 'futuristico', 'affascinante'],
+        'pt': ['caprichoso', 'movimentado', 'sereno', 'misterioso', 'futurista', 'charmoso'],
+    }
+    # VERY basic pronoun handling - assumes plural if 'and' or ',' is in names
+    pronouns = {
+        'en': ('They', 'them'), 'es': ('Ellos/Ellas', 'ellos/ellas'), 'fr': ('Ils/Elles', 'eux/elles'),
+        'de': ('Sie', 'sie'), 'it': ('Loro', 'loro'), 'pt': ('Eles/Elas', 'eles/elas')
+    }
+    if ' and ' in characters or ',' in characters:
+        pronoun = pronouns.get(language, pronouns['en'])[0]
+    else:
+        # Default to singular - needs gender detection for many languages!
+         pronoun = pronouns.get(language, pronouns['en'])[0] # Using plural for simplicity now
+
+
+    # --- Select Random Elements ---
+    chosen_template = random.choice(templates.get(language, templates['en']))
+    lang_elements = type_elements.get(language, type_elements['en'])
+    elements1 = lang_elements.get(story_type, lang_elements['Adventure'])[0]
+    elements2 = lang_elements.get(story_type, lang_elements['Adventure'])[1]
+    element1 = random.choice(elements1)
+    element2 = random.choice(elements2)
+    type_adj = type_adjectives.get(language, type_adjectives['en']).get(story_type, 'amazing')
+    setting_adj = random.choice(setting_adjectives.get(language, setting_adjectives['en']))
+
+
+    # --- Format the story ---
+    story_title = chosen_template[0].format(
+        characters=characters,
+        setting=setting,
+        type=story_type,
+        type_adj=type_adj,
+        adj=setting_adj,
+        pronoun=pronoun,
+        element1=element1,
+        element2=element2,
+    )
+    story_body = chosen_template[1].format(
+        characters=f"**{characters}**", # Make names bold
+        setting=f"*{setting}*", # Make setting italic
+        type=story_type,
+        type_adj=type_adj,
+        adj=setting_adj,
+        pronoun=pronoun,
+        element1=element1,
+        element2=element2,
+    )
+
+    # Simple markdown-like bold/italic to HTML
+    story_body = story_body.replace("**", "<strong>").replace("*", "<em>")
+
+    return story_title, story_body
+
+# --- Flask Routes ---
 
 @app.route('/')
 def index():
-    """Serves the main HTML page."""
+    """Displays the main input form."""
     return render_template('index.html')
 
 @app.route('/generate', methods=['POST'])
-def generate():
-    """Handles story generation requests from the frontend."""
-    if not model:
-        return jsonify({'error': 'Story generation model not configured. Check API Key.'}), 500
-    if not request.is_json:
-        return jsonify({'error': 'Request must be JSON'}), 400
-
-    data = request.get_json()
-    action = data.get('action')
-    inputs = data.get('inputs')
-    history = data.get('history', []) # Get previous story parts
-    instructions = data.get('instructions') # For 'continue' action
-
-    if not action or not inputs:
-        return jsonify({'error': 'Missing action or inputs in request'}), 400
-
-    # Basic input validation (can be more robust)
-    if action not in ['start', 'continue', 'end']:
-        return jsonify({'error': 'Invalid action specified'}), 400
-    if action == 'start' and not all(k in inputs for k in ['characters', 'setting', 'genre', 'length', 'language']):
-         return jsonify({'error': 'Missing required input fields for starting story'}), 400
-    if action in ['continue', 'end'] and not history:
-         # Allow continuing/ending without history just in case, but maybe warn
-         pass # Or return jsonify({'error': 'Cannot continue/end without story history'}), 400
-
-
+def generate_story():
+    """Handles form submission and displays the generated story."""
     try:
-        prompt = build_prompt(inputs, history, action, instructions)
-        print(f"Attempting generation for action: {action}") # Server log
-        # Safety settings can be adjusted if needed
-        # safety_settings = [...]
-        response = model.generate_content(
-            prompt,
-            # safety_settings=safety_settings
-            )
+        characters = request.form['characters']
+        setting = request.form['setting']
+        story_type = request.form['type']
+        language = request.form['language']
 
-        # --- Handle Response ---
-        # Check for safety blocks or empty response more robustly
-        generated_text = None
-        error_message = None
+        # Basic input validation (can be more robust)
+        if not characters or not setting or not story_type or not language:
+             raise ValueError("Missing input fields")
 
-        if response.prompt_feedback.block_reason:
-            error_message = f"Generation blocked due to: {response.prompt_feedback.block_reason}"
-            print(f"Generation Blocked: {error_message}") # Server log
-            if response.candidates:
-                 print(f"Candidate Safety Ratings: {response.candidates[0].safety_ratings}")
+        # --- Generate Story ---
+        story_title, story_body = generate_simple_story(characters, setting, story_type, language)
 
-        elif not response.parts:
-             # Sometimes no parts but also no block reason? Check candidates.
-             if response.candidates and response.candidates[0].content.parts:
-                 generated_text = response.candidates[0].content.text # Use text from candidate
-             elif response.candidates and response.candidates[0].finish_reason != "STOP":
-                  error_message = f"Generation stopped unexpectedly. Reason: {response.candidates[0].finish_reason}"
-                  print(f"Generation Failed: {error_message}") # Server log
-                  if response.candidates[0].safety_ratings:
-                       print(f"Candidate Safety Ratings: {response.candidates[0].safety_ratings}")
-             else:
-                 error_message = "Generation failed: Received an empty response from the API."
-                 print(error_message) # Server log
 
-        else:
-            generated_text = response.text # Get the text if parts exist
-
-        # --- Return Result ---
-        if generated_text:
-            print(f"Generation Successful. Part length: {len(generated_text)} chars.") # Server log
-            return jsonify({'story_part': generated_text})
-        else:
-            # Ensure an error message is set if text is None
-            if not error_message:
-                 error_message = "An unknown generation error occurred."
-            return jsonify({'error': error_message}), 500 # Internal server error type
-
+        return render_template('result.html',
+                               story_title=story_title,
+                               story_body=story_body)
     except Exception as e:
-        print(f"Error during generation: {e}") # Log the full error
-        # Provide a generic error to the client
-        return jsonify({'error': f'An internal server error occurred during generation: {type(e).__name__}'}), 500
+        print(f"Error generating story: {e}") # Log error for debugging
+        # You could redirect back to index with an error message
+        # from flask import flash, redirect, url_for
+        # flash(f"Oops! Something went wrong: {e}", 'error')
+        # return redirect(url_for('index'))
+        # Or show a generic error page:
+        return render_template('result.html',
+                               story_title="Oh no! 😟",
+                               story_body="Something went a bit wobbly generating your story. Please check your inputs and try again! ✨")
 
 
+# --- Main Execution ---
 if __name__ == '__main__':
-    # Use debug=True for development only, it auto-reloads
-    app.run(debug=True, port=5001) # Use a different port if 5000 is busy
+    # Use debug=True only for local development, not production
+    app.run(debug=True)
+    # For production with gunicorn: gunicorn app:app
