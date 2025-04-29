@@ -1,0 +1,438 @@
+/* --- Theme Variables (Sophisticated Yellow) --- */
+:root {
+    --primary-bg: #FFFBEB;       /* Light Creamy Yellow */
+    --container-bg: #FEF9C3;    /* Lighter Yellow */
+    --border-color: #FDE68A;    /* Soft Yellow Border */
+    --accent-yellow: #FACC15;   /* Bright Yellow */
+    --hover-yellow: #FBBF24;    /* Slightly darker yellow */
+    --medium-yellow: #FDE047;   /* Medium Yellow */
+    --text-dark: #422006;       /* Dark Brown for text */
+    --heading-color: #92400E;   /* Dark Amber/Brown */
+    --subheading-color: #B45309; /* Slightly lighter brown */
+    --error-bg: #FEF2F2;        /* Light Red */
+    --error-text: #991B1B;      /* Dark Red */
+    --error-border: #FCA5A5;    /* Red border */
+    --disabled-bg: #fde68a;     /* Lighter yellow when disabled (Matches original .tool-button:disabled) */
+    --disabled-text: #a16207;   /* Darker text for disabled (Matches original .tool-button:disabled) */
+    --focus-shadow: rgba(250, 204, 21, 0.4); /* Glow effect */
+    --button-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    --button-hover-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    --button-active-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+/* --- Basic Reset & Font Setup --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    /* font-family: 'Open Sans', sans-serif; */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Apply Yellow Theme Font */
+    line-height: 1.6;
+    /* background-color: #fdfaf4; */
+    background-color: var(--primary-bg); /* Apply Yellow Theme BG */
+    /* color: #4a4a4a; */
+    color: var(--text-dark); /* Apply Yellow Theme Text */
+    padding: 20px;
+    font-size: 16px; /* Match yellow theme base font size */
+}
+
+h1, h2 {
+    /* font-family: 'Merriweather', serif; */
+    /* Let's use the main font for consistency, but keep serif option in mind if needed */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* color: #5a4a3a; */
+    color: var(--heading-color); /* Apply Yellow Theme Heading Color */
+    margin-bottom: 25px; /* Match Yellow Theme */
+    text-align: center;
+    font-weight: 600; /* Match Yellow Theme */
+}
+
+h1 {
+    font-size: 2.5em; /* Match Yellow Theme */
+    border-bottom: 3px solid var(--accent-yellow); /* Match Yellow Theme */
+    padding-bottom: 15px; /* Match Yellow Theme */
+}
+
+h2 {
+    /* margin-top: 1.5em; */
+    margin-top: 40px; /* Match Yellow Theme */
+    /* border-bottom: 1px solid #e0d8cc; */
+    border-bottom: 2px solid var(--medium-yellow); /* Style like H3 in Yellow Theme */
+    padding-bottom: 8px; /* Match Yellow Theme H3 */
+    font-size: 1.9em; /* Match Yellow Theme */
+    color: var(--subheading-color); /* Match Yellow Theme H2 */
+}
+
+p {
+    margin-bottom: 1em; /* Keep default p spacing */
+}
+
+/* Container */
+.container {
+    max-width: 800px; /* Keep story width */
+    margin: 30px auto; /* Match Yellow Theme */
+    /* background-color: #fff; */
+    background-color: var(--container-bg); /* Apply Yellow Theme Container BG */
+    padding: 30px 40px; /* Match Yellow Theme */
+    /* border-radius: 8px; */
+    border-radius: 12px; /* Match Yellow Theme */
+    /* box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); */
+    box-shadow: 0 8px 25px rgba(146, 64, 14, 0.12); /* Match Yellow Theme Shadow */
+    /* border: 1px solid #e0d8cc; */
+    border: 1px solid var(--border-color); /* Apply Yellow Theme Border */
+}
+
+header p {
+    text-align: center;
+    /* color: #7a6a5a; */
+    color: var(--subheading-color); /* Apply Yellow Theme Color */
+    font-style: italic;
+    opacity: 0.9; /* Slightly softer */
+}
+
+/* Form Styling */
+#story-form {
+    margin-top: 20px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px; /* Increase gap slightly like yellow theme controls */
+    margin-bottom: 30px; /* Increase spacing */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.span-2 {
+    grid-column: span 2;
+}
+
+label {
+    font-weight: 600; /* Match Yellow Theme */
+    margin-bottom: 8px; /* Match Yellow Theme */
+    /* color: #5a4a3a; */
+    color: var(--subheading-color); /* Apply Yellow Theme Label Color */
+    font-size: 0.95em; /* Match Yellow Theme */
+}
+
+textarea, select, input[type="text"] {
+    width: 100%;
+    /* padding: 10px 12px; */
+    padding: 12px 15px; /* Match Yellow Theme Input Padding */
+    /* border: 1px solid #ccc; */
+    border: 1px solid var(--border-color); /* Match Yellow Theme Border */
+    /* border-radius: 4px; */
+    border-radius: 6px; /* Match Yellow Theme Radius */
+    /* font-family: 'Open Sans', sans-serif; */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Match Yellow Theme Font */
+    /* font-size: 1rem; */
+    font-size: 1em; /* Match Yellow Theme Font Size */
+    /* transition: border-color 0.2s ease-in-out; */
+    transition: border-color 0.3s, box-shadow 0.3s; /* Match Yellow Theme Transition */
+    background-color: #FFFDF3; /* Match Yellow Theme Input BG */
+    color: var(--text-dark); /* Match Yellow Theme Input Text */
+    margin-bottom: 0; /* Remove default margin if gap handles spacing */
+}
+/* Add back margin specifically below the inputs used in the grid if gap isn't enough */
+/* .form-grid textarea, .form-grid select, .form-grid input[type="text"] {
+     margin-bottom: 18px;
+} */
+
+
+textarea {
+    resize: vertical;
+    /* min-height: 60px; */
+    min-height: 120px; /* Match Yellow Theme */
+    line-height: 1.5; /* Match Yellow Theme */
+}
+
+textarea:focus, select:focus, input[type="text"]:focus {
+    /* border-color: #8a7a6a; */
+    border-color: var(--accent-yellow); /* Match Yellow Theme Focus */
+    outline: none;
+    /* box-shadow: 0 0 0 2px rgba(90, 74, 58, 0.1); */
+    box-shadow: 0 0 0 3px var(--focus-shadow); /* Match Yellow Theme Focus Shadow */
+}
+
+/* Select arrow styling from Yellow Theme */
+select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%2392400E' height='24' viewBox='0 0 24 24' width='24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3Cpath d='M0 0h24v24H0z' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 20px;
+    padding-right: 40px;
+}
+select:disabled {
+    background-color: var(--disabled-bg); /* Use a lighter disabled bg */
+    cursor: not-allowed;
+    opacity: 0.7;
+    background-image: none; /* Hide arrow when disabled */
+}
+
+
+/* Buttons */
+button {
+    /* font-family: 'Open Sans', sans-serif; */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Match Yellow Theme Font */
+    font-weight: 600; /* Match Yellow Theme */
+    /* padding: 10px 20px; */
+    padding: 12px 28px; /* Match Yellow Theme Padding */
+    border: none;
+    /* border-radius: 4px; */
+    border-radius: 6px; /* Match Yellow Theme Radius */
+    cursor: pointer;
+    /* transition: background-color 0.2s ease-in-out, transform 0.1s ease; */
+    transition: background-color 0.3s, transform 0.1s, box-shadow 0.2s; /* Match Yellow Theme */
+    /* font-size: 1rem; */
+    font-size: 1.05em; /* Match Yellow Theme */
+    text-align: center;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    /* opacity: 0.6; */
+    background-color: var(--disabled-bg); /* Match Yellow Theme Disabled BG */
+    color: var(--disabled-text); /* Match Yellow Theme Disabled Text */
+    box-shadow: none;
+    transform: none;
+}
+
+button:active:not(:disabled) {
+     transform: translateY(1px) scale(0.98); /* Match Yellow Theme Active */
+     box-shadow: var(--button-active-shadow); /* Match Yellow Theme Active Shadow */
+}
+
+.button-primary {
+    /* background-color: #7a6a5a; */
+    background-color: var(--accent-yellow); /* Match Yellow Theme Primary BG */
+    color: var(--text-dark); /* Match Yellow Theme Primary Text */
+    display: block; /* Keep structural style */
+    width: 100%; /* Keep structural style */
+    margin-top: 10px;
+    box-shadow: var(--button-shadow); /* Apply Yellow Theme Shadow */
+}
+
+.button-primary:hover:not(:disabled) {
+    /* background-color: #5a4a3a; */
+    background-color: var(--hover-yellow); /* Match Yellow Theme Hover BG */
+    box-shadow: var(--button-hover-shadow); /* Apply Yellow Theme Hover Shadow */
+}
+
+
+.button-secondary {
+    /* background-color: #e0d8cc; */
+    background-color: var(--medium-yellow); /* Use Medium Yellow for Secondary */
+    /* color: #5a4a3a; */
+    color: var(--text-dark);
+    /* border: 1px solid #c0b8ac; */
+    border: none; /* Remove border like primary */
+    box-shadow: var(--button-shadow);
+}
+
+.button-secondary:hover:not(:disabled) {
+    /* background-color: #d0c8bc; */
+    background-color: var(--accent-yellow); /* Use Accent Yellow on Hover */
+    box-shadow: var(--button-hover-shadow);
+}
+
+/* Story Display & Controls */
+#story-display-section {
+     margin-top: 30px;
+}
+
+#story-output {
+    margin-top: 25px; /* Match yellow theme */
+    /* background-color: #fdfaf4; */
+    background-color: var(--primary-bg); /* Match Yellow Theme Output BG */
+    /* padding: 20px; */
+    padding: 25px; /* Slightly more padding */
+    /* border-radius: 4px; */
+    border-radius: 8px; /* Match Yellow Theme Output Radius */
+    /* border: 1px dashed #e0d8cc; */
+    border: 1px dashed var(--border-color); /* Match Yellow Theme Output Border */
+    /* min-height: 100px; */
+    min-height: 120px; /* Match Yellow Theme Output Height */
+    font-family: sans-serif; /* Match Yellow Theme Output Font */
+    font-size: 1em; /* Match Yellow Theme Output Font Size */
+    line-height: 1.7; /* Match Yellow Theme Output Line Height */
+    white-space: pre-wrap; /* Preserve line breaks from AI */
+}
+
+.story-part {
+    margin-bottom: 25px;
+    padding-bottom: 25px;
+    /* border-bottom: 1px solid #eee8dd; */
+    border-bottom: 1px solid var(--border-color); /* Use theme border color */
+}
+
+/* Target the actual content within the part, not the part div itself */
+.story-part p {
+   margin-bottom: 0; /* Remove paragraph margin inside story part */
+}
+
+
+.story-part:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.story-part h3 { /* Part number styling */
+     /* font-family: 'Merriweather', serif; */ /* Optional: Keep serif for distinction */
+     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+     /* color: #8a7a6a; */
+     color: var(--heading-color); /* Use theme heading color */
+     margin-bottom: 15px; /* More space */
+     font-size: 1.2em; /* Slightly larger */
+     border-bottom: 2px solid var(--medium-yellow); /* Add separator like H3 */
+     padding-bottom: 5px;
+     display: inline-block; /* Make border fit text */
+}
+
+.story-controls {
+    margin-top: 25px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+}
+
+.story-controls input[type="text"] {
+    flex-grow: 1;
+    min-width: 200px;
+    margin-bottom: 0; /* Remove default margin in this context */
+}
+/* Ensure buttons in controls use standard padding and don't stretch */
+.story-controls button {
+    padding: 12px 28px; /* Keep consistent button padding */
+    width: auto; /* Override width: 100% potentially inherited */
+    display: inline-block; /* Ensure they sit side-by-side */
+    margin-top: 0; /* Override potential inherited margin */
+    flex-shrink: 0; /* Prevent buttons from shrinking too much */
+}
+
+.reset-button {
+    display: block; /* Keep as block to center it */
+    margin: 25px auto 0 auto; /* Center horizontally */
+    width: fit-content; /* Size to content */
+    /* Style as secondary button */
+    background-color: var(--medium-yellow);
+    color: var(--text-dark);
+    border: none;
+    box-shadow: var(--button-shadow);
+}
+.reset-button:hover:not(:disabled) {
+     background-color: var(--accent-yellow);
+     box-shadow: var(--button-hover-shadow);
+}
+
+
+/* Loading Indicator */
+.loading-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    margin: 20px 0; /* Match yellow theme */
+    /* color: #7a6a5a; */
+    color: var(--subheading-color); /* Match Yellow Theme Loading Text */
+    gap: 10px; /* Match yellow theme */
+    font-size: 1.1em; /* Match yellow theme */
+    font-style: italic; /* Match yellow theme */
+}
+
+.spinner {
+    /* border: 4px solid #f3f3f3; */
+    border: 3px solid rgba(180, 83, 9, 0.2); /* Match Yellow Theme Spinner Base */
+    /* border-top: 4px solid #7a6a5a; */
+    border-top-color: var(--subheading-color); /* Match Yellow Theme Spinner Top */
+    border-radius: 50%;
+    /* width: 24px; */
+    width: 20px; /* Match Yellow Theme Spinner Size */
+    /* height: 24px; */
+    height: 20px; /* Match Yellow Theme Spinner Size */
+    animation: spin 1s linear infinite;
+    /* margin-right: 0; */ /* Removed margin, using gap now */
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); } /* Match Yellow Theme */
+}
+
+/* Error Message */
+.error-message {
+    margin: 20px 0; /* Match Yellow Theme */
+    padding: 15px 20px; /* Match Yellow Theme */
+    /* background-color: #f8d7da; */
+    background-color: var(--error-bg); /* Match Yellow Theme Error BG */
+    /* color: #721c24; */
+    color: var(--error-text); /* Match Yellow Theme Error Text */
+    /* border: 1px solid #f5c6cb; */
+    border: 1px solid var(--error-border); /* Match Yellow Theme Error Border */
+    /* border-radius: 4px; */
+    border-radius: 6px; /* Match Yellow Theme Error Radius */
+    border-left: 5px solid #DC2626; /* Match Yellow Theme Error Accent */
+    text-align: left; /* Match Yellow Theme Error Align */
+    font-weight: 500; /* Match Yellow Theme Error Weight */
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    padding-top: 20px;
+    /* border-top: 1px solid #e0d8cc; */
+    border-top: 1px solid var(--border-color); /* Apply Yellow Theme Border */
+    font-size: 0.9em;
+    /* color: #aaa; */
+    color: var(--subheading-color); /* Apply Yellow Theme Color */
+    opacity: 0.7; /* Make it slightly muted */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding: 20px 15px; /* Reduce padding on smaller screens */
+        margin: 15px auto;
+    }
+    .form-grid {
+        grid-template-columns: 1fr; /* Stack form elements */
+        gap: 20px; /* Reduce gap */
+    }
+    .form-group.span-2 {
+        grid-column: span 1; /* Reset span */
+    }
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.6em; margin-top: 30px;}
+
+    .story-controls {
+        flex-direction: column; /* Stack controls vertically */
+        align-items: stretch; /* Make controls fill width */
+    }
+    .story-controls input[type="text"] {
+        min-width: auto; /* Remove min-width */
+        margin-bottom: 10px; /* Add space between input and buttons */
+    }
+    .story-controls button {
+        width: 100%; /* Make buttons full width */
+    }
+}
+
+@media (max-width: 480px) {
+     body { padding: 10px; }
+     h1 { font-size: 1.8em; padding-bottom: 10px;}
+     h2 { font-size: 1.4em; }
+     button { padding: 10px 20px; font-size: 1em; }
+     .story-controls button { padding: 10px 20px; } /* Adjust control button padding too */
+     textarea, select, input[type="text"] { padding: 10px 12px; }
+     select { padding-right: 35px; background-position: right 8px center; }
+}
