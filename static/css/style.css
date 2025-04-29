@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Pacifico&display=swap');
+/* Pacifico for joyful titles, Merriweather for literary body */
+
+:root {
+    --primary-bg: #fff8e1; /* Creamy paper */
+    --secondary-bg: #ffffff; /* White card */
+    --accent-color: #ffab40; /* Warm amber */
+    --text-color: #4e342e; /* Dark brown */
+    --title-font: 'Pacifico', cursive;
+    --body-font: 'Merriweather', serif;
+    --border-color: #ffe0b2; /* Lighter amber */
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--body-font);
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    line-height: 1.7;
+    padding: 20px;
+    background-image: linear-gradient(rgba(255,248,225,0.8), rgba(255,248,225,0.8)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='12' viewBox='0 0 20 12'%3E%3Cg fill-rule='evenodd'%3E%3Cg id='charlie-brown' fill='%23e3c8a0' fill-opacity='0.1'%3E%3Cpath d='M9.8 12L0 2.2V.8l10 10 10-10v1.4L10.2 12h-.4zm-4 0L0 6.2V4.8L7.2 12H5.8zm8.4 0L20 6.2V4.8L12.8 12h1.4zM9.8 0l.2.2.2-.2h-.4zm-4 0L10 4.2 14.2 0h-1.4L10 2.8 7.2 0H5.8z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); /* Subtle pattern */
+}
+
+.container {
+    max-width: 700px;
+    margin: 30px auto;
+    background-color: var(--secondary-bg);
+    padding: 30px 40px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    border: 5px solid var(--border-color);
+    position: relative; /* For potential absolute positioned elements */
+}
+
+.container::before {
+    content: '📜'; /* Scroll emoji */
+    position: absolute;
+    top: -25px;
+    left: -25px;
+    font-size: 40px;
+    transform: rotate(-15deg);
+}
+.container::after {
+    content: '🖋️'; /* Pen emoji */
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    font-size: 35px;
+    transform: rotate(15deg);
+}
+
+
+h1 {
+    font-family: var(--title-font);
+    color: var(--accent-color);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 3em;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+h1::before, h1::after {
+    content: '✨';
+    margin: 0 10px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--text-color);
+}
+
+label i { /* For Font Awesome or similar icon fonts if you add them */
+    margin-right: 8px;
+    color: var(--accent-color);
+}
+
+input[type="text"],
+select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    font-family: var(--body-font);
+    font-size: 1em;
+    background-color: var(--primary-bg);
+    color: var(--text-color);
+    transition: border-color 0.3s ease;
+}
+
+input[type="text"]:focus,
+select:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 5px rgba(255, 171, 64, 0.5); /* Accent color glow */
+}
+
+select {
+     appearance: none; /* Remove default dropdown arrow */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234e342e' d='M6 8L0 2l1-1 5 5 5-5 1 1z'/%3E%3C/svg%3E"); /* Custom arrow */
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 12px;
+    padding-right: 40px; /* Make space for arrow */
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    background-color: var(--accent-color);
+    color: white;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--title-font);
+    font-size: 1.5em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 30px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.btn:hover {
+    background-color: #ffa000; /* Darker amber */
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.story-output {
+    margin-top: 40px;
+    padding: 30px;
+    background-color: var(--primary-bg);
+    border: 3px dashed var(--border-color);
+    border-radius: 10px;
+    animation: fadeIn 1s ease-in-out;
+}
+
+.story-output h2 {
+    font-family: var(--title-font);
+    color: var(--accent-color);
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+.story-output p {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    text-align: justify;
+}
+
+.story-output p::first-letter { /* Drop cap */
+    font-size: 2.5em;
+    float: left;
+    margin-right: 0.1em;
+    line-height: 0.8;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 30px;
+    text-decoration: none;
+    color: var(--accent-color);
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #ffa000;
+    text-decoration: underline;
+}
+
+.back-link::before {
+    content: '« ';
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    .container { padding: 20px; margin: 20px auto; border-width: 3px; }
+    h1 { font-size: 2.5em; }
+    .story-output { padding: 20px; }
+    .container::before, .container::after { display: none; } /* Hide absolute emojis on small screens */
+}
