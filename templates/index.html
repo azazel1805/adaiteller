@@ -3,36 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Story Generator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#FACC15"/> <!-- Match accent yellow -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icons/icon-192x192.png') }}"> <!-- iOS home screen icon -->
+    <!-- Add favicon links here if you have them -->
+    <!-- <link rel="icon" href="/favicon.ico" sizes="any"> -->
+    <!-- <link rel="icon" href="/icon.svg" type="image/svg+xml"> -->
+
+    <title>Adai Teller</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> <!-- Path to your CSS -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Using Segoe UI as primary from your CSS -->
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>✨ AI Story Generator ✨</h1>
+            <h1>✨ Adai Teller ✨</h1>
             <p>Craft your tale, one chapter at a time.</p>
         </header>
 
         <section id="input-section">
             <h2>Let's Set the Scene</h2>
+            <!-- NOTE: Form submission is handled by JS, not default HTML submission -->
             <form id="story-form">
                 <div class="form-grid">
                     <div class="form-group span-2">
+                        <!-- ID used by JS: 'characters' -->
                         <label for="characters">🎭 Characters:</label>
                         <textarea id="characters" name="characters" rows="3" placeholder="E.g., Lyra, the starlight cartographer; Bort, a sentient, grumpy rock..." required></textarea>
                     </div>
                     <div class="form-group span-2">
+                         <!-- ID used by JS: 'setting' -->
                         <label for="setting">🌍 Setting:</label>
                         <textarea id="setting" name="setting" rows="3" placeholder="E.g., The floating markets of Aeridor; A forgotten library beneath the desert sands..." required></textarea>
                     </div>
                      <div class="form-group span-2">
+                         <!-- ID used by JS: 'other-details' -->
+                         <!-- Name should match key expected by backend if different: 'other_details' -->
                         <label for="other-details">💡 Other Starting Details (Optional):</label>
                         <textarea id="other-details" name="other_details" rows="2" placeholder="E.g., The story starts with a cryptic message; A rare lunar eclipse is happening..."></textarea>
                     </div>
                     <div class="form-group">
+                        <!-- ID used by JS: 'genre-select'. Name used for form data: 'genre' -->
                         <label for="genre-select">📚 Genre:</label>
                         <select id="genre-select" name="genre" required>
                             <option value="" disabled selected>Select Genre...</option>
@@ -48,25 +67,31 @@
                         </select>
                     </div>
                     <div class="form-group">
+                         <!-- ID used by JS: 'length-select'. Name used for form data: 'length' -->
                         <label for="length-select">📄 Length per Part:</label>
                         <select id="length-select" name="length" required>
-                            <option value="short">Short (~1-2 pages)</option>
-                            <option value="medium" selected>Medium (~2-4 pages)</option>
-                            <option value="long">Long (~4-6 pages)</option>
-                            <option value="epic">Epic (~6-8 pages)</option>
+                            <!-- Value attributes MUST match keys in app.py LENGTH_CHOICES_MAP -->
+                            <option value="short">Short (~250-500 words)</option>
+                            <option value="medium" selected>Medium (~500-1000 words)</option>
+                            <option value="long">Long (~1000-1500 words)</option>
+                            <option value="epic">Epic (~1500-2000 words)</option>
                         </select>
                     </div>
                     <div class="form-group">
+                        <!-- ID used by JS: 'language-select'. Name used for form data: 'language' -->
                         <label for="language-select">🌐 Language:</label>
                         <select id="language-select" name="language" required>
                             <option value="English" selected>English</option>
                             <option value="French">French</option>
                             <option value="German">German</option>
                             <option value="Turkish">Turkish</option>
+                            <option value="Spanish">Spanish</option> <!-- Added back based on prev context -->
                         </select>
                     </div>
                 </div>
-                <button type="submit" id="start-button" class="button-primary">Start Writing</button>
+                 <!-- Use type="button" because JS handles the click event -->
+                 <!-- ID used by JS: 'start-button' -->
+                <button type="button" id="start-button" class="button-primary">Start Writing</button>
             </form>
         </section>
 
@@ -76,18 +101,28 @@
                 <!-- Generated story parts will appear here -->
             </div>
 
+             <!-- ID used by JS: 'controls' -->
              <div id="controls" class="story-controls">
-                 <input type="text" id="next-instructions" placeholder="Optional instructions for next part...">
-                 <button id="continue-button" class="button-secondary">➡️ Continue Story</button>
-                 <button id="end-button" class="button-secondary">🏁 Write Conclusion</button>
+                  <!-- ID used by JS: 'next-instructions' -->
+                  <!-- Name should match key expected by backend if different: 'instructions' -->
+                 <input type="text" id="next-instructions" name="instructions" placeholder="Optional instructions for next part...">
+                 <!-- Use type="button" -->
+                 <!-- ID used by JS: 'continue-button' -->
+                 <button type="button" id="continue-button" class="button-secondary">➡️ Continue Story</button>
+                 <!-- ID used by JS: 'end-button' -->
+                 <button type="button" id="end-button" class="button-secondary">🏁 Write Conclusion</button>
              </div>
-             <button id="reset-button" class="button-secondary reset-button" style="display: none;">♻️ Start New Story</button>
+             <!-- Use type="button" -->
+             <!-- ID used by JS: 'reset-button' -->
+             <button type="button" id="reset-button" class="button-secondary reset-button" style="display: none;">♻️ Start New Story</button>
         </section>
 
+        <!-- ID used by JS: 'loading' -->
         <div id="loading" class="loading-indicator" style="display: none;">
             <div class="spinner"></div>
             <span>Generating...</span>
         </div>
+         <!-- ID used by JS: 'error-message' -->
         <div id="error-message" class="error-message" style="display: none;"></div>
 
     </div>
@@ -96,6 +131,9 @@
         Powered by Flask & Google Gemini & Created by HOT®
     </footer>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- Your application logic script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- PWA Service Worker registration script (runs after main script) -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>
