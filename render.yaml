@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: adai-teller # You can change this name on Render
+    env: python # Use 'python' for standard Python runtime
+    plan: free # Or your desired plan (e.g., starter)
+    # Region: frankfurt # Optional: Specify a region closer to you/your users
+    buildCommand: "pip install --upgrade pip && pip install -r requirements.txt" # Ensure pip is updated, then install deps
+    startCommand: "gunicorn app:app" # Tells gunicorn to run the 'app' object found in the 'app.py' file
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11 # Specify a Python version supported by Render
+      - key: GEMINI_API_KEY
+        sync: false # IMPORTANT: Set this as a SECRET in the Render Dashboard Environment section
+
+# Optional Health Check (Render uses TCP check by default)
+# healthCheckPath: / # Checks if the root path returns a 2xx/3xx status
