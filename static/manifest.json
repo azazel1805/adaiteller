@@ -1,6 +1,6 @@
 {
   "name": "Adai Teller",
-  "short_name": "AdaiTeller",
+  "short_name": "AdaT",
   "description": "Generate creative stories with AI, one chapter at a time.",
   "start_url": "/",
   "display": "standalone",
